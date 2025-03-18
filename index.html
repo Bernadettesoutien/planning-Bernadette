@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendrier de Transport - Bernadette</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0d6efd;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .calendar-container {
+            margin-bottom: 30px;
+        }
+        .fc-event {
+            cursor: pointer;
+        }
+        .fc-event-title {
+            font-weight: bold;
+        }
+        .modal-header {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .time-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .time-slot {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .time-slot:hover {
+            background-color: #e9ecef;
+        }
+        .time-slot.selected {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+        .time-slot.booked {
+            background-color: #dc3545;
+            color: white;
+            border-color: #dc3545;
+            cursor: not-allowed;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calendrier de Transport - Bernadette</h1>
+        
+        <div class="calendar-container">
+            <div id="calendar"></div>
+        </div>
+        
+        <div class="footer">
+            <p>Ce calendrier permet aux amis et proches de s'inscrire pour le transport de Bernadette vers ses rendez-vous médicaux.</p>
+        </div>
+    </div>
+
+    <!-- Modal pour ajouter/voir un rendez-vous -->
+    <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventModalLabel">Détails du rendez-vous</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="eventForm">
+                        <input type="hidden" id="eventId">
+                        <input type="hidden" id="eventDate">
+                        
+                        <div class="mb-3">
+                            <label for="eventTitle" class="form-label">Titre du rendez-vous</label>
+                            <input type="text" class="form-control" id="eventTitle" placeholder="Ex: Rendez-vous médecin" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="eventLocation" class="form-label">Lieu</label>
+                            <input type="text" class="form-control" id="eventLocation" placeholder="Ex: Hôpital Saint-Louis">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="eventTime" class="form-label">Heure</label>
+                            <select class="form-select" id="eventTime" required>
+                                <option value="">Sélectionner une heure</option>
+                                <option value="08:00">08:00</option>
+                                <option value="08:30">08:30</option>
+                                <option value="09:00">09:00</option>
+                                <option value="09:30">09:30</option>
+                                <option value="10:00">10:00</option>
+                                <option value="10:30">10:30</option>
+                                <option value="11:00">11:00</option>
+                                <option value="11:30">11:30</option>
+                                <option value="12:00">12:00</option>
+                                <option value="12:30">12:30</option>
+                                <option value="13:00">13:00</option>
+                                <option value="13:30">13:30</option>
+                                <option value="14:00">14:00</option>
+                                <option value="14:30">14:30</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="eventNotes" class="form-label">Notes supplémentaires</label>
+                            <textarea class="form-control" id="eventNotes" rows="3" placeholder="Informations importantes pour le transporteur"></textarea>
+                        </div>
+                        
+                        <div id="transporterSection" class="mb-3 d-none">
+                            <h5 class="mb-3">S'inscrire comme transporteur</h5>
+                            
+                            <div class="mb-3">
+                                <label for="transporterName" class="form-label">Votre nom</label>
+                                <input type="text" class="form-control" id="transporterName" placeholder="Prénom et Nom">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="transporterPhone" class="form-label">Numéro de téléphone</label>
+                                <input type="tel" class="form-control" id="transporterPhone" placeholder="Ex: 06 12 34 56 78">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="transporterNotes" class="form-label">Notes (optionnel)</label>
+                                <textarea class="form-control" id="transporterNotes" rows="2" placeholder="Informations supplémentaires"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-danger d-none" id="deleteEventBtn">Supprimer</button>
+                    <button type="button" class="btn btn-success d-none" id="registerTransporterBtn">S'inscrire comme transporteur</button>
+                    <button type="button" class="btn btn-primary" id="saveEventBtn">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour voir les détails d'un transporteur -->
+    <div class="modal fade" id="transporterModal" tabindex="-1" aria-labelledby="transporterModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="transporterModalLabel">Détails du transporteur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="transporterDetails">
+                        <p><strong>Nom:</strong> <span id="detailTransporterName"></span></p>
+                        <p><strong>Téléphone:</strong> <span id="detailTransporterPhone"></span></p>
+                        <p><strong>Notes:</strong> <span id="detailTransporterNotes"></span></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-danger" id="cancelTransportBtn">Annuler ce transport</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialisation des données
+            let events = JSON.parse(localStorage.getItem('calendarEvents')) || [];
+            let transporters = JSON.parse(localStorage.getItem('transporters')) || {};
+            
+            // Initialisation du calendrier
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'fr',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                },
+                selectable: true,
+                selectMirror: true,
+                navLinks: true,
+                editable: true,
+                dayMaxEvents: true,
+                businessHours: {
+                    daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+                    startTime: '08:00',
+                    endTime: '15:00',
+                },
+                select: function(info) {
+                    // Vérifier si la date est dans le passé
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const selectedDate = new Date(info.startStr);
+                    
+                    if (selectedDate < today) {
+                        alert("Vous ne pouvez pas ajouter d'événements dans le passé.");
+                        calendar.unselect();
+                        return;
+                    }
+                    
+                    // Réinitialiser le formulaire
+                    document.getElementById('eventForm').reset();
+                    document.getElementById('eventId').value = '';
+                    document.getElementById('eventDate').value = info.startStr;
+                    document.getElementById('transporterSection').classList.add('d-none');
+                    document.getElementById('registerTransporterBtn').classList.add('d-none');
+                    document.getElementById('deleteEventBtn').classList.add('d-none');
+                    document.getElementById('saveEventBtn').classList.remove('d-none');
+                    
+                    // Afficher le modal
+                    const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+                    eventModal.show();
+                    
+                    calendar.unselect();
+                },
+                eventClick: function(info) {
+                    const eventId = info.event.id;
+                    const event = events.find(e => e.id === eventId);
+                    
+                    if (event) {
+                        // Remplir le formulaire avec les détails de l'événement
+                        document.getElementById('eventId').value = event.id;
+                        document.getElementById('eventDate').value = event.date;
+                        document.getElementById('eventTitle').value = event.title;
+                        document.getElementById('eventLocation').value = event.location || '';
+                        document.getElementById('eventTime').value = event.time;
+                        document.getElementById('eventNotes').value = event.notes || '';
+                        
+                        // Vérifier si un transporteur est déjà assigné
+                        if (transporters[eventId]) {
+                            document.getElementById('transporterSection').classList.add('d-none');
+                            document.getElementById('registerTransporterBtn').classList.add('d-none');
+                            document.getElementById('saveEventBtn').classList.remove('d-none');
+                        } else {
+                            document.getElementById('transporterSection').classList.remove('d-none');
+                            document.getElementById('registerTransporterBtn').classList.remove('d-none');
+                            document.getElementById('saveEventBtn').classList.add('d-none');
+                        }
+                        
+                        document.getElementById('deleteEventBtn').classList.remove('d-none');
+                        
+                        // Afficher le modal
+                        const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+                        eventModal.show();
+                    }
+                },
+                events: events.map(event => {
+                    const hasTransporter = transporters[event.id] ? true : false;
+                    return {
+                        id: event.id,
+                        title: event.title,
+                        start: `${event.date}T${event.time}`,
+                        backgroundColor: hasTransporter ? '#28a745' : '#0d6efd',
+                        borderColor: hasTransporter ? '#28a745' : '#0d6efd',
+                        textColor: 'white'
+                    };
+                })
+            });
+            
+            calendar.render();
+            
+            // Gestionnaire d'événements pour le bouton d'enregistrement
+            document.getElementById('saveEventBtn').addEventListener('click', function() {
+                const eventId = document.getElementById('eventId').value || Date.now().toString();
+                const eventDate = document.getElementById('eventDate').value;
+                const eventTitle = document.getElementById('eventTitle').value;
+                const eventLocation = document.getElementById('eventLocation').value;
+                const eventTime = document.getElementById('eventTime').value;
+                const eventNotes = document.getElementById('eventNotes').value;
+                
+                if (!eventTitle || !eventTime) {
+                    alert('Veuillez remplir tous les champs obligatoires.');
+                    return;
+                }
+                
+                // Créer ou mettre à jour l'événement
+                const eventData = {
+                    id: eventId,
+                    date: eventDate,
+                    title: eventTitle,
+                    location: eventLocation,
+                    time: eventTime,
+                    notes: eventNotes
+                };
+                
+                // Mettre à jour la liste des événements
+                const existingEventIndex = events.findIndex(e => e.id === eventId);
+                if (existingEventIndex >= 0) {
+                    events[existingEventIndex] = eventData;
+                } else {
+                    events.push(eventData);
+                }
+                
+                // Sauvegarder les événements dans le localStorage
+                localStorage.setItem('calendarEvents', JSON.stringify(events));
+                
+                // Mettre à jour le calendrier
+                calendar.getEventById(eventId)?.remove();
+                calendar.addEvent({
+                    id: eventId,
+                    title: eventTitle,
+                    start: `${eventDate}T${eventTime}`,
+                    backgroundColor: transporters[eventId] ? '#28a745' : '#0d6efd',
+                    borderColor: transporters[eventId] ? '#28a745' : '#0d6efd',
+                    textColor: 'white'
+                });
+                
+                // Fermer le modal
+                bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+            });
+            
+            // Gestionnaire d'événements pour le bouton de suppression
+            document.getElementById('deleteEventBtn').addEventListener('click', function() {
+                const eventId = document.getElementById('eventId').value;
+                
+                if (confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
+                    // Supprimer l'événement de la liste
+                    events = events.filter(e => e.id !== eventId);
+                    
+                    // Supprimer le transporteur associé
+                    if (transporters[eventId]) {
+                        delete transporters[eventId];
+                    }
+                    
+                    // Sauvegarder les données dans le localStorage
+                    localStorage.setItem('calendarEvents', JSON.stringify(events));
+                    localStorage.setItem('transporters', JSON.stringify(transporters));
+                    
+                    // Mettre à jour le calendrier
+                    calendar.getEventById(eventId)?.remove();
+                    
+                    // Fermer le modal
+                    bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+                }
+            });
+            
+            // Gestionnaire d'événements pour le bouton d'inscription comme transporteur
+            document.getElementById('registerTransporterBtn').addEventListener('click', function() {
+                const eventId = document.getElementById('eventId').value;
+                const transporterName = document.getElementById('transporterName').value;
+                const transporterPhone = document.getElementById('transporterPhone').value;
+                const transporterNotes = document.getElementById('transporterNotes').value;
+                
+                if (!transporterName || !transporterPhone) {
+                    alert('Veuillez remplir tous les champs obligatoires.');
+                    return;
+                }
+                
+                // Enregistrer le transporteur
+                transporters[eventId] = {
+                    name: transporterName,
+                    phone: transporterPhone,
+                    notes: transporterNotes
+                };
+                
+                // Sauvegarder les transporteurs dans le localStorage
+                localStorage.setItem('transporters', JSON.stringify(transporters));
+                
+                // Mettre à jour l'apparence de l'événement dans le calendrier
+                const event = calendar.getEventById(eventId);
+                if (event) {
+                    event.setProp('backgroundColor', '#28a745');
+                    event.setProp('borderColor', '#28a745');
+                }
+                
+                // Fermer le modal
+                bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+                
+                alert('Merci de vous être inscrit comme transporteur !');
+            });
+            
+            // Fonction pour afficher les détails d'un transporteur
+            function showTransporterDetails(eventId) {
+                const transporter = transporters[eventId];
+                if (transporter) {
+                    document.getElementById('detailTransporterName').textContent = transporter.name;
+                    document.getElementById('detailTransporterPhone').textContent = transporter.phone;
+                    document.getElementById('detailTransporterNotes').textContent = transporter.notes || 'Aucune note';
+                    
+                    const transporterModal = new bootstrap.Modal(document.getElementById('transporterModal'));
+                    transporterModal.show();
+                    
+                    // Configurer le bouton d'annulation
+                    document.getElementById('cancelTransportBtn').onclick = function() {
+                        if (confirm('Êtes-vous sûr de vouloir annuler ce transport ?')) {
+                            delete transporters[eventId];
+                            localStorage.setItem('transporters', JSON.stringify(transporters));
+                            
+                            // Mettre à jour l'apparence de l'événement dans le calendrier
+                            const event = calendar.getEventById(eventId);
+                            if (event) {
+                                event.setProp('backgroundColor', '#0d6efd');
+                                event.setProp('borderColor', '#0d6efd');
+                            }
+                            
+                            transporterModal.hide();
+                        }
+                    };
+                }
+            }
+        });
+    </script>
+</body>
+</html>
